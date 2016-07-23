@@ -5,7 +5,6 @@
 ; <name2>, <student ID2>
 ; <name3>, <student ID3>
 ;-----------------------------
-(require racket/set) ;import needed standard library
 ;-------------------------------------------------------------------------------------
 ; If "graph" is acyclic, "topsort" returns an ordered list of its vertices obtained by
 ; topologically sorting it; otherwise "topsort" returns the symbol "cyclic".
@@ -26,29 +25,40 @@
 ; "noInEdges" returns a list of all vertices of a graph which have no incoming edges.
 ;-------------------------------------------------------------------------------------
 ;diff -- return a sub-list of list2 whose members are not in list1
-(define (diff list1 list2)
-	(filter   ;filter list2 with given results produced by the lambda-defined function below
-		(lambda (x) 
-			(not (member x list1));see if x is a member of list1
-		) 
-	list2)
-)
-
-;union -- get the union of the given lists,which are members of "lists"
-(define (union lists)
-	(foldl     ;apply the operation down through the members of 'lists'
-		(lambda (a result) ;define the operation
-			(set-union a result) ;the "set-union" is from racket's standard library,which returns the union of the given two lists
-		)
-	'() lists)
-)
-
 (define (noInEdges graph)
-	(diff 
-		(union (map cdr graph)) ;get a list of vertices who has incoming edges
-		(union graph) ;get a list of all vertices
-	)
-)
+  (if (null? graph) '()
+      (findallvex graph (getvex graph))))
+
+
+(define (getvex graph)
+  (cond ((null? (cdr graph)) (list (caar graph)))
+        (else
+         (let (( vexes (getvex (cdr graph))))
+         (cons (caar graph) vexes)))))
+
+(define (findallvex graph vexList)
+  (cond ((null? vexList) '())
+        (else
+         (let ((vexes (findallvex graph (cdr vexList))))
+           (let ((avex (findAvex graph (car VexList))))
+             (if (not (boolean? avex))
+                 (cons avex vexes)
+                 vexes))))))
+         
+         
+
+(define (findAvex graph vex)
+  (cond ((null? graph) vex)
+        ((ismember vex (cdar graph)) )
+        (else
+         (findAvex (cdr graph) vex))))
+           
+(define (ismember x list)
+  (cond ((null? list) #f)
+        ((eq? x (car list)) #t)
+        (else
+         (ismember x (cdr list)))))
+
 
 ;-------------------------------------------------------------------------------------
 ; "delete" returns the graph obtained by removing the vertices with no incoming edges
@@ -56,13 +66,10 @@
 ;-------------------------------------------------------------------------------------
 
 (define (delete vertices graph)
-	(filter  ;drop out edges from graph whose starting point is a to-be-deleted vertix
-		(lambda (x)
-			(not (member (car x) vertices)) ;see if the starting point is in the "vertices" list
-		)
-	graph)
-)
-
+	(cond ((null? vertices) graph)
+              ((eq? (car vertices) (caar graph)) (delete (cdr vertices) (cdr graph)))
+              (else
+               (delete vertices (append (cdr graph) (list (car graph)))))))
 ;-------------------------------------------------------------------------------------
 ; Some graphs to try.
 ;-------------------------------------------------------------------------------------
